@@ -1,0 +1,89 @@
+/* 
+============================================================================  
+    Environment
+    1. Eclipse 4.6.1 in Windows 7 64bit
+    2. gradle-3.4.1
+       
+       
+    Setup in Development Machine
+    1. install JDK, and setup JAVA_HOME
+    2. install gradle, and setup gradle\bin in PATH
+
+
+    Config 
+    1. by command
+            gradle eclipse                   # generate library for eclipse
+    2. by eclpse
+            right click project, Gradle > Refresh Gradle Project
+    
+                          
+    Run    
+    1. Open a command prompt in the project path
+    2. gradle clean             
+    3. gradle test 
+    4. gradle build --refresh-dependencies      // allows to refresh remote repository dependencies
+    5. gradle clean test build    
+    
+    Alternatively run, after build the fat jar
+    1. java -cp .;bar-1.0.jar foo.bar.cli.Cli -m=-1    
+============================================================================
+*/
+
+apply plugin: "application"
+mainClassName = 'foo.bar.cli.Cli'
+
+
+apply plugin: "java"
+
+repositories {    
+    mavenCentral()   
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+// build fat jar, https://stackoverflow.com/a/4894308
+jar {
+    group = "foo"
+    baseName = "bar"
+    version =  "1.0"
+    
+    manifest { 
+        attributes "Main-Class": "$mainClassName"
+    }  
+    
+    from {
+        configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+    }
+}
+
+
+
+
+dependencies {
+    compile "org.slf4j:slf4j-log4j12:1.7.25"
+    compile "log4j:log4j:1.2.17"
+    compile "log4j:apache-log4j-extras:1.2.17"
+    
+    compile "commons-cli:commons-cli:1.4"
+    
+    testCompile "junit:junit:4.12"
+}
+
+
+
+
+
+apply plugin: "eclipse"
+
+eclipse {
+    classpath {
+        
+        /*
+            0. This is the default behavior, https://docs.gradle.org/current/dsl/org.gradle.plugins.ide.eclipse.model.EclipseClasspath.html#org.gradle.plugins.ide.eclipse.model.EclipseClasspath:downloadSources 
+            1. If not works, try to clear /~[user]/.gradle/caches/*.*                
+        */
+        downloadSources = true        
+        downloadJavadoc = true
+    }
+}
